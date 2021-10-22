@@ -8,3 +8,4 @@ echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee 
 sudo apt update
 sudo apt install -y elasticsearch
 pip install elasticsearch
+pip install beebotte
