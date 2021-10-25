@@ -15,4 +15,5 @@ for i in range(10):
     bbdd.write(float(r),i) #bbdd.write('cer_pruebabbdd','bbdd',(float(r))
     time.sleep(1)
 lectura = bbdd.read(limit=740) 
+print(lectura)
 print(lectura[0]['data'])
