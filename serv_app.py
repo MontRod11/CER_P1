@@ -5,7 +5,7 @@ from threading import *
 from beebotte import *
 
 I_WRITE = 0
-primera_vez = 1
+# primera_vez = 1
 
 elastic_client = Elasticsearch([{'host':'localhost','port':9200}])
 token = 'token_5YNOoMGF3pj5EP1f'
@@ -20,16 +20,17 @@ elastic_client.indices.delete(index=tabla, ignore=[400,404])
 
 @app.route("/")#,methods=['GET'])
 def inicio():
-    global I_WRITE
-    global primera_vez
-    if primera_vez == 1:
-        r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
-        elastic_client.index(index=tabla, id=I_WRITE, document={'numero':float(r)})
-        bbdd.write(float(r),I_WRITE)
-        I_WRITE =I_WRITE+1
-        primera_vez = 0
-    else:
-        r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
+    # global I_WRITE
+    # global primera_vez
+    #if primera_vez == 1:
+    #     r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
+    #     elastic_client.index(index=tabla, id=I_WRITE, document={'numero':float(r)})
+    #     bbdd.write(float(r),I_WRITE)
+    #     I_WRITE =I_WRITE+1
+    #     primera_vez = 0
+    # else:
+    #     r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
+    r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
     return render_template('index.html',num_aleat=r)
 
 @app.route("/hello")
@@ -44,11 +45,12 @@ def hello():
 
 def get_num_aleatorio():
     global I_WRITE
-
-    r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
-    elastic_client.index(index=tabla, id=I_WRITE, document={'numero':float(r)})
-    bbdd.write(float(r),I_WRITE)
-    I_WRITE =I_WRITE+1
+    while True: 
+        r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
+        elastic_client.index(index=tabla, id=I_WRITE, document={'numero':float(r)})
+        bbdd.write(float(r),I_WRITE)
+        I_WRITE =I_WRITE+1
+        time.sleep(120)
     # diccionario_bbdd = elastic_client.search(index=tabla)
     # print(str(diccionario_bbdd['hits']['hits']))
     # value = diccionario_bbdd['hits']['hits'][i]['_source']['numero']
@@ -69,7 +71,7 @@ def get_num_aleatorio():
 #@app.route("/laura")
 #def hello_laura():
 #    return render_template('/laura/index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4])
-hilo1 = Timer(120,get_num_aleatorio)#Thread(target=get_num_aleatorio)
+# hilo1 = Timer(120,get_num_aleatorio)#Thread(target=get_num_aleatorio)
 
 if __name__ == "__main__":
 
@@ -78,5 +80,6 @@ if __name__ == "__main__":
     #     elastic_client.index(index=tabla, id=i, document={'numero':float(r)})
     #     i_write =i_write+1
     #app.run()
+    hilo1 = Thread(target=get_num_aleatorio, daemon=True)
     hilo1.start()
     app.run(host='0.0.0.0', port=5000, debug=True)
