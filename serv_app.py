@@ -6,16 +6,16 @@ from beebotte import *
 
 
 I_WRITE = 0
-# primera_vez = 1
 login = True
 medialocal_global = "No se puede obtener este valor sin estar registrado"
 mediainternet_global = "No se puede obtener este valor sin estar registrado"
+# CREAR NUEVO RECURSO CADA VEZ, SE PUEDE HACER USANDO EL CÓDIGO COMENTADO SI SE PONE LA API Y SECRET KEY
 
 elastic_client = Elasticsearch([{'host':'localhost','port':9200}])
 token = 'token_5YNOoMGF3pj5EP1f'
 hostname = 'api.beebotte.com'
 bclient = BBT(token=token,hostname=hostname)
-recurso="bbddserver_1"
+recurso="bbddserver_2"
 #bclient.deleteResource('cer_bbddserver', recurso)
 #resource_bbdd = Resource(bclient,'cer_bbddserver',recurso)
 # bclient.addResource(
@@ -26,7 +26,7 @@ recurso="bbddserver_1"
 #   description = "Base de datos de internet prueba",
 #   sendOnSubscribe = False
 # )
-#bbdd = Resource(bclient, 'cer_bbddserver','bbddserver')
+
 app = Flask(__name__)
 
 tabla = "tabla2"
@@ -40,26 +40,29 @@ def inicio():
 
 @app.route("/hello")
 def hello():
-    print("Base de datos local")
+    print("\nBase de datos local")
     for i in range(I_WRITE):
         data = elastic_client.get(index=tabla,id=i)['_source']['numero']
-        #print(str(data))
-        print('Elemento '+str(i)+' : '+str(data)+'\n')
-    #lectura = bbdd.read('cer_bbddserver','bbddserver',limit=I_WRITE) # LEE TODA LA BASE DE DATOS DE INTERNET
-    # lectura = bbdd.read(limit=I_WRITE)
-    # lectura = bclient.read('cer_bbddserver','bbddserver',limit=I_WRITE)
+        print('Elemento '+str(i)+' : '+str(data))
+
     print("Base de datos de internet")
     lectura = bclient.read('cer_bbddserver',recurso,limit=I_WRITE)
-    print(lectura)
+    for i in range(len(lectura)):
+        value = lectura[i]['data']
+        print('Elemento '+str(i)+' : '+str(value))
+    print('\n')
+    #print(str(lectura)+'\n')
     return render_template('/laura/index.html',num_aleat=str(data), mean_local = medialocal_global, mean_beebotte=mediainternet_global)
 
 
 @app.route("/entrada")
 def input():
     return 'entrada'
+
 @app.route("/registro") 
 def register():
     return 'registro'
+
 @app.route("/media_local") 
 def local_mean():
     global medialocal_global
@@ -67,19 +70,11 @@ def local_mean():
     print("\nCalculo de la media en la base de datos local:")
     for i in range(I_WRITE):
         data.append(elastic_client.get(index=tabla,id=i)['_source']['numero'])
-        print('Elemento '+str(i)+' : '+str(data)+'\n')
-    # diccionario_bbdd = elastic_client.search(index=tabla)
-    # print(str(diccionario_bbdd))
+        print('Elemento '+str(i)+' : '+str(data))
+
     def media(sum_values,num_values):
         return sum_values/num_values
         
-    # def get_values(dict):
-    #     acum = 0
-    #     for i in range(len(dict['hits']['hits'])):
-    #         value = dict['hits']['hits'][i]['_source']['numero']
-    #         print(str(i)+' numero de la lista: '+str(value))
-    #         acum = acum + value
-    #     return acum, len(dict['hits']['hits'])
     def get_values(dict):
         acum = 0
         for i in range(len(dict)):
@@ -92,8 +87,8 @@ def local_mean():
     mean = media(sum_values,num_values)
 
     print('La media es:'+str(mean))
-    print(sum_values)
-    print(num_values)
+    print('Acumulacion: '+str(sum_values))
+    print('Nº de valores: '+str(num_values)+"\n")
     if login == True:
         medialocal_global = str(mean)
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], 
@@ -106,10 +101,11 @@ def local_mean():
 @app.route("/media_internet") 
 def internet_mean():
     global mediainternet_global
-    #lectura = bbdd.read(limit=I_WRITE) # LEE TODA LA BASE DE DATOS DE INTERNET
-    # lectura = bclient.read('cer_bbddserver','bbddserver',limit=I_WRITE)
     lectura = bclient.read('cer_bbddserver',recurso,limit=I_WRITE)
-    print(str(lectura))
+    for i in range(len(lectura)):
+        value = lectura[i]['data']
+        print('Elemento '+str(i)+' : '+str(value))
+    #print(str(lectura))
 
     def media(sum_values,num_values):
         return sum_values/num_values
@@ -127,8 +123,8 @@ def internet_mean():
     mean = media(sum_values,num_values)
 
     print('La media es:'+str(mean))
-    print(sum_values)
-    print(num_values)
+    print('Acumulacion: '+str(sum_values))
+    print('Nº de valores: '+str(num_values)+"\n")
     if login == True:
         mediainternet_global = str(mean)
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], mean_local=medialocal_global,
@@ -137,7 +133,7 @@ def internet_mean():
         mediainternet_global = "No se puede obtener este valor sin estar registrado"
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], mean_local=medialocal_global,
                                 mean_beebotte=mediainternet_global)
-    # return 'media_internet'    
+
 @app.route("/graficas") 
 def graphs():
     return 'graficas'    
@@ -147,9 +143,6 @@ def get_num_aleatorio():
     while True: 
         r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
         elastic_client.index(index=tabla, id=I_WRITE, document={'numero':float(r)})
-        #bbdd.write('cer_bbddserver','bbddserver',ts=I_WRITE,data=float(r))
-        #bbdd.write(ts=I_WRITE,data=float(r))
-        #bclient.write('cer_bbddserver','bbddserver',ts=I_WRITE,data=float(r))
         bclient.write('cer_bbddserver',recurso,data=float(r))
         I_WRITE =I_WRITE+1
         time.sleep(30) #120
