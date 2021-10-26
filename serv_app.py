@@ -35,11 +35,18 @@ elastic_client.indices.delete(index=tabla, ignore=[400,404])
 
 @app.route("/")
 def inicio():
+    """
+    Esta función es la funcion base e inicial del programa, en este caso solo se actualiza el indice sacando un número aleatorio de la pagina web numero al azar
+    """
     r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
     return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global)
 
 @app.route("/hello")
 def hello():
+    """ 
+    Esta funcion es una función de prueba que permite ver en la terminal las bases de datos y sus contenidos y muestra en el índice el último elemento que se
+    ha incluido en la base de datos local.
+    """
     print("\nBase de datos local")
     for i in range(I_WRITE):
         data = elastic_client.get(index=tabla,id=i)['_source']['numero']
@@ -65,31 +72,36 @@ def register():
 
 @app.route("/media_local") 
 def local_mean():
+    """
+    Esta función realiza el cálculo de la media de la base de datos local y actualiza la página web sacando su valor, si el usuario está loggeado y, si no lo 
+    está, entonces no saca nada.
+    """
     global medialocal_global
-    data = []
-    print("\nCalculo de la media en la base de datos local:")
-    for i in range(I_WRITE):
-        data.append(elastic_client.get(index=tabla,id=i)['_source']['numero'])
-        print('Elemento '+str(i)+' : '+str(data))
-
-    def media(sum_values,num_values):
-        return sum_values/num_values
-        
-    def get_values(dict):
-        acum = 0
-        for i in range(len(dict)):
-            value = dict[i]
-            print(str(i)+' numero de la lista: '+str(value))
-            acum = acum + value
-        return acum, len(dict)
-
-    sum_values, num_values = get_values(data)
-    mean = media(sum_values,num_values)
-
-    print('La media es:'+str(mean))
-    print('Acumulacion: '+str(sum_values))
-    print('Nº de valores: '+str(num_values)+"\n")
     if login == True:
+        data = []
+        print("\nCalculo de la media en la base de datos local:")
+        for i in range(I_WRITE):
+            data.append(elastic_client.get(index=tabla,id=i)['_source']['numero'])
+            print('Elemento '+str(i)+' : '+str(data))
+
+        def media(sum_values,num_values):
+            return sum_values/num_values
+            
+        def get_values(dict):
+            acum = 0
+            for i in range(len(dict)):
+                value = dict[i]
+                print(str(i)+' numero de la lista: '+str(value))
+                acum = acum + value
+            return acum, len(dict)
+
+        sum_values, num_values = get_values(data)
+        mean = media(sum_values,num_values)
+
+        print('La media es:'+str(mean))
+        print('Acumulacion: '+str(sum_values))
+        print('Nº de valores: '+str(num_values)+"\n")
+
         medialocal_global = str(mean)
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], 
                                 mean_local=medialocal_global,mean_beebotte=mediainternet_global)
@@ -100,32 +112,37 @@ def local_mean():
 
 @app.route("/media_internet") 
 def internet_mean():
+    """
+    Esta función realiza el cálculo de la media de la base de datos de internet y actualiza la página web sacando su valor, si el usuario está loggeado y, 
+    si no lo está, entonces no saca nada.
+    """
     global mediainternet_global
-    lectura = bclient.read('cer_bbddserver',recurso,limit=I_WRITE)
-    for i in range(len(lectura)):
-        value = lectura[i]['data']
-        print('Elemento '+str(i)+' : '+str(value))
-    #print(str(lectura))
-
-    def media(sum_values,num_values):
-        return sum_values/num_values
-        
-    def get_values(dict):
-        print("\nCalculo de la media en la base de datos de internet")
-        acum = 0
-        for i in range(len(dict)):
-            value = dict[i]['data']
-            print('Elemento '+str(i)+' de la lista: '+str(value))
-            acum = acum + value
-        return acum, len(dict)
-
-    sum_values, num_values = get_values(lectura)
-    mean = media(sum_values,num_values)
-
-    print('La media es:'+str(mean))
-    print('Acumulacion: '+str(sum_values))
-    print('Nº de valores: '+str(num_values)+"\n")
     if login == True:
+        lectura = bclient.read('cer_bbddserver',recurso,limit=I_WRITE)
+        for i in range(len(lectura)):
+            value = lectura[i]['data']
+            print('Elemento '+str(i)+' : '+str(value))
+        #print(str(lectura))
+
+        def media(sum_values,num_values):
+            return sum_values/num_values
+            
+        def get_values(dict):
+            print("\nCalculo de la media en la base de datos de internet")
+            acum = 0
+            for i in range(len(dict)):
+                value = dict[i]['data']
+                print('Elemento '+str(i)+' de la lista: '+str(value))
+                acum = acum + value
+            return acum, len(dict)
+
+        sum_values, num_values = get_values(lectura)
+        mean = media(sum_values,num_values)
+
+        print('La media es:'+str(mean))
+        print('Acumulacion: '+str(sum_values))
+        print('Nº de valores: '+str(num_values)+"\n")
+
         mediainternet_global = str(mean)
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], mean_local=medialocal_global,
                                 mean_beebotte=mediainternet_global)
