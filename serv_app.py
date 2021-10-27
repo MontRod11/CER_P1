@@ -33,15 +33,32 @@ tabla = "tabla2"
 elastic_client.indices.create(index=tabla, ignore=400)
 elastic_client.indices.delete(index=tabla, ignore=[400,404])
 
-@app.route("/",methods = ["POST"])
+@app.route("/")#,methods = ["POST"])
 def inicio():
     """
     Esta función es la funcion base e inicial del programa, en este caso solo se actualiza el indice sacando un número aleatorio de la pagina web numero al azar
     """
-    if request.method == "POST":  
-         user=request.form['email'] 
+    # if request.method == "POST":  
+    #     user=request.form['email'] 
+    #     if session['email'] == ' ':
+	#         render_template('falloiniciosesion.html')	
+    #     else:
+	#         """Comprobar que existe el usuario en la base de datos y comprobar la constaseña"""
+	#         """    devolver en user el session['email'] ya que es un str """
     r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
     return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global)
+
+@app.route("/loggeado",methods = ["POST"])
+def loggeado():
+    if request.method == "POST":  
+        user=request.form['email'] 
+        if session['email'] == ' ':
+	        return render_template('falloiniciosesion.html')	
+        else:
+	        """Comprobar que existe el usuario en la base de datos y comprobar la constaseña"""
+	        """    devolver en user el session['email'] ya que es un str """
+    r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
+    return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
 
 @app.route("/hello")
 def hello():
@@ -68,6 +85,7 @@ def hello():
 def login():
     global login_var
     """Realizar el login y si es succesful entonces poner login == TRUE"""
+    
     login_var = True
     return render_template("indexlogin.html")  
 
@@ -180,4 +198,5 @@ if __name__ == "__main__":
 
     hilo1 = Thread(target=get_num_aleatorio, daemon=True)
     hilo1.start()
+    # app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
     app.run(host='0.0.0.0', port=5000, debug=True)
