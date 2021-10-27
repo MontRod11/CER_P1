@@ -33,11 +33,13 @@ tabla = "tabla2"
 elastic_client.indices.create(index=tabla, ignore=400)
 elastic_client.indices.delete(index=tabla, ignore=[400,404])
 
-@app.route("/")
+@app.route("/",methods = ["POST"])
 def inicio():
     """
     Esta función es la funcion base e inicial del programa, en este caso solo se actualiza el indice sacando un número aleatorio de la pagina web numero al azar
     """
+    if request.method == "POST":  
+         user=request.form['email'] 
     r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
     return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global)
 
@@ -76,7 +78,9 @@ def signin():
 
 @app.route("/logout") 
 def logout():
-    return 'logout'
+    global login_var
+    # login_var = False
+    return render_template("indexlogout.html") 
 
 @app.route("/media_local") 
 def local_mean():
