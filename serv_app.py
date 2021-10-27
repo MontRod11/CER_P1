@@ -69,8 +69,9 @@ def login():
     login_var = True
     return render_template("indexlogin.html")  
 
-@app.route("/signin") 
+@app.route("/signin")  
 def signin():
+    """Realizar el signin metiendo el ususario en la base de datos y usandolo como inicio de sesion"""
     return render_template("indexsignin.html")  
 
 @app.route("/logout") 
