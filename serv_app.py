@@ -1,4 +1,4 @@
-from flask import Flask, render_template 
+from flask import Flask, render_template, redirect, request, url_for, session, flash
 from elasticsearch import Elasticsearch
 import re, requests
 from threading import *
@@ -6,7 +6,7 @@ from beebotte import *
 
 
 I_WRITE = 0
-login = True
+login_var = False
 medialocal_global = "No se puede obtener este valor sin estar registrado"
 mediainternet_global = "No se puede obtener este valor sin estar registrado"
 # CREAR NUEVO RECURSO CADA VEZ, SE PUEDE HACER USANDO EL CÓDIGO COMENTADO SI SE PONE LA API Y SECRET KEY
@@ -18,7 +18,7 @@ bclient = BBT(token=token,hostname=hostname)
 recurso="bbddserver_2"
 #bclient.deleteResource('cer_bbddserver', recurso)
 #resource_bbdd = Resource(bclient,'cer_bbddserver',recurso)
-# bclient.addResource(
+# bclient.addResource( 
 #   channel = 'cer_bbddserver',
 #   name = recurso,
 #   vtype = BBT_Types.Number,
@@ -62,13 +62,20 @@ def hello():
     return render_template('/laura/index.html',num_aleat=str(data), mean_local = medialocal_global, mean_beebotte=mediainternet_global)
 
 
-@app.route("/entrada")
-def input():
-    return 'entrada'
+@app.route("/login")
+def login():
+    global login_var
+    """Realizar el login y si es succesful entonces poner login == TRUE"""
+    login_var = True
+    return render_template("indexlogin.html")  
 
-@app.route("/registro") 
-def register():
-    return 'registro'
+@app.route("/signin") 
+def signin():
+    return render_template("indexsignin.html")  
+
+@app.route("/logout") 
+def logout():
+    return 'logout'
 
 @app.route("/media_local") 
 def local_mean():
@@ -77,7 +84,7 @@ def local_mean():
     está, entonces no saca nada.
     """
     global medialocal_global
-    if login == True:
+    if login_var == True:
         data = []
         print("\nCalculo de la media en la base de datos local:")
         for i in range(I_WRITE):
@@ -117,7 +124,7 @@ def internet_mean():
     si no lo está, entonces no saca nada.
     """
     global mediainternet_global
-    if login == True:
+    if login_var == True:
         lectura = bclient.read('cer_bbddserver',recurso,limit=I_WRITE)
         for i in range(len(lectura)):
             value = lectura[i]['data']
