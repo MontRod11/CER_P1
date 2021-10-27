@@ -52,7 +52,7 @@ def inicio():
 def loggeado():
     if request.method == "POST":  
         user=request.form['email'] 
-        if session['email'] == ' ':
+        if user == '':
 	        return render_template('falloiniciosesion.html')	
         else:
 	        """Comprobar que existe el usuario en la base de datos y comprobar la constaseña"""
@@ -97,7 +97,7 @@ def signin():
 @app.route("/logout") 
 def logout():
     global login_var
-    # login_var = False
+    login_var = False
     return render_template("indexlogout.html") 
 
 @app.route("/media_local") 
