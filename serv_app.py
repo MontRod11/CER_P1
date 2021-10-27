@@ -97,7 +97,11 @@ def signin():
 @app.route("/logout") 
 def logout():
     global login_var
+    global medialocal_global
+    global mediainternet_global
     login_var = False
+    mediainternet_global = "No se puede obtener este valor sin estar registrado"
+    medialocal_global = "No se puede obtener este valor sin estar registrado"
     return render_template("indexlogout.html") 
 
 @app.route("/media_local") 
