@@ -8,6 +8,7 @@ from beebotte import *
 I_WRITE = 0
 I_WRITE_NAMES = 0
 login_var = False
+user = "Inicie sesión"
 medialocal_global = "No se puede obtener este valor sin estar registrado"
 mediainternet_global = "No se puede obtener este valor sin estar registrado"
 # CREAR NUEVO RECURSO CADA VEZ, SE PUEDE HACER USANDO EL CÓDIGO COMENTADO SI SE PONE LA API Y SECRET KEY
@@ -49,7 +50,7 @@ def inicio():
 	#         """Comprobar que existe el usuario en la base de datos y comprobar la constaseña"""
 	#         """    devolver en user el session['email'] ya que es un str """
     r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
-    return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global)
+    return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
 
 
 @app.route("/hello")
@@ -70,7 +71,7 @@ def hello():
         print('Elemento '+str(i)+' : '+str(value))
     print('\n')
     #print(str(lectura)+'\n')
-    return render_template('/laura/index.html',num_aleat=str(data), mean_local = medialocal_global, mean_beebotte=mediainternet_global)
+    return render_template('/laura/index.html',num_aleat=str(data), mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
 
 
 @app.route("/login")
@@ -174,11 +175,11 @@ def local_mean():
 
         medialocal_global = str(mean)
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], 
-                                mean_local=medialocal_global,mean_beebotte=mediainternet_global)
+                                mean_local=medialocal_global,mean_beebotte=mediainternet_global, user=user)
     else:
         medialocal_global = "No se puede obtener este valor sin estar registrado"
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], 
-                                mean_local=medialocal_global,mean_beebotte=mediainternet_global)
+                                mean_local=medialocal_global,mean_beebotte=mediainternet_global, user=user)
 
 @app.route("/media_internet") 
 def internet_mean():
@@ -215,11 +216,11 @@ def internet_mean():
 
         mediainternet_global = str(mean)
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], mean_local=medialocal_global,
-                                mean_beebotte=mediainternet_global)
+                                mean_beebotte=mediainternet_global, user=user)
     else:
         mediainternet_global = "No se puede obtener este valor sin estar registrado"
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], mean_local=medialocal_global,
-                                mean_beebotte=mediainternet_global)
+                                mean_beebotte=mediainternet_global,user=user)
 
 @app.route("/graficas") 
 def graphs():
