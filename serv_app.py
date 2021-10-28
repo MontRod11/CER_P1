@@ -6,6 +6,7 @@ from beebotte import *
 
 
 I_WRITE = 0
+I_WRITE_NAMES = 0
 login_var = False
 medialocal_global = "No se puede obtener este valor sin estar registrado"
 mediainternet_global = "No se puede obtener este valor sin estar registrado"
@@ -32,6 +33,8 @@ app = Flask(__name__)
 tabla = "tabla2"
 elastic_client.indices.create(index=tabla, ignore=400)
 elastic_client.indices.delete(index=tabla, ignore=[400,404])
+tabla_nombres = "tabla_nombres1"
+elastic_client.indices.create(index=tabla_nombres, ignore=400)
 
 @app.route("/")#,methods = ["POST"])
 def inicio():
@@ -48,17 +51,6 @@ def inicio():
     r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
     return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global)
 
-@app.route("/loggeado",methods = ["POST"])
-def loggeado():
-    if request.method == "POST":  
-        user=request.form['email'] 
-        if user == '':
-	        return render_template('falloiniciosesion.html')	
-        else:
-	        """Comprobar que existe el usuario en la base de datos y comprobar la constaseña"""
-	        """    devolver en user el session['email'] ya que es un str """
-    r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
-    return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
 
 @app.route("/hello")
 def hello():
@@ -89,10 +81,54 @@ def login():
     login_var = True
     return render_template("indexlogin.html")  
 
+@app.route("/loggeado",methods = ["POST"])
+def loggeado():
+    if request.method == "POST":  
+        user=request.form['email'] 
+        if user == '':
+	        return render_template('falloiniciosesion.html')	
+        else:
+	        """Comprobar que existe el usuario en la base de datos y comprobar la constaseña"""
+	        """    devolver en user el session['email'] ya que es un str """
+    r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
+    return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
+
+
 @app.route("/signin")  
 def signin():
     """Realizar el signin metiendo el ususario en la base de datos y usandolo como inicio de sesion"""
     return render_template("indexsignin.html")  
+
+@app.route("/registrado",methods = ["POST"])
+def registrado():
+    """Comprobar que existe el usuario en la base de datos y comprobar la constaseña devolver en user el session['email'] ya que es un str """
+    global I_WRITE_NAMES
+    if request.method == "POST":  
+        user=request.form['email'] 
+        if user == '':
+	        return render_template('falloregistro.html')	
+        else:
+
+            if I_WRITE_NAMES == 0:
+                elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user})
+                I_WRITE_NAMES =I_WRITE_NAMES+1
+                return render_template('index.html',mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
+            else:
+                for i in range(I_WRITE_NAMES):
+                    nombre = elastic_client.get(index=tabla_nombres,id=i)['_source']['nombre']
+                    print('Nombre '+str(i)+' : '+nombre)
+                    if nombre == user:
+                        ya_registrado = 1
+                if ya_registrado == 1:
+                    return render_template('falloregistro_yaloggeado.html')
+                else:
+                    elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user})
+                    I_WRITE_NAMES =I_WRITE_NAMES+1
+                    return render_template('index.html',mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
+            
+	        
+
+    
 
 @app.route("/logout") 
 def logout():
