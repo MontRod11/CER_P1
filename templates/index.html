@@ -1,21 +1,21 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FlaskApp</title>
+    <title>LausiApp</title>
 </head>
-<body>
-    <h2 class="centeredText">Sesión con el usuario: {{user}}</h2>
-    <h3 class="centeredText">Número aleatorio:{{num_aleat}}</h3>
-    <a href="/hello">BOTON DE PRUEBA</a><br>
-    <a href="/login">Login (INICIO SESIÓN)</a><br>
-    <a href="/signin">Sign-In (REGISTRO)</a><br>
-    <a href="/logout">Logout (SALIDA SESIÓN)</a><br>
-    <p><a href="/media_local">Botón de MEDIA de la BBDD Local (ElasticSearch)</a><br>&nbsp;&nbsp;&nbsp;&nbsp;El resultado de la media de la BBDD local es: <i>{{mean_local}}</i></p>
-    <p><a href="/media_internet">Botón de MEDIA de la BBDD de Internet (Beebotte)</a><br>&nbsp;&nbsp;&nbsp;&nbsp;El resultado de la media de la BBDD Beebotte es: <i>{{mean_beebotte}}</i></p>
-    <a href="/graficas">Generación de gráficas externas</a><br>
+<body style="background-color:rgb(201, 150, 241)"></body>
+    <div align="center">
+        <h2 class="centeredText">Sesión con el usuario: {{user}}</h2>
+        <h3 class="centeredText">Número aleatorio:{{num_aleat}}</h3>
+        <a href="/hello">BOTON DE PRUEBA</a><br>
+        <a href="/login">Login (INICIO SESIÓN)</a><br>
+        <a href="/signin">Sign-In (REGISTRO)</a><br>
+        <a href="/logout">Logout (SALIDA SESIÓN)</a><br>
+        <p><a href="/media_local"><button>Botón de MEDIA de la BBDD Local (ElasticSearch)</button></a>&nbsp;&nbsp;&nbsp;&nbsp;<span style="border-image: initial; border: 1px solid black;"><i> {{mean_local}} </i>&nbsp;</span></p>
+        <p><a href="/media_internet"><button>Botón de MEDIA de la BBDD de Internet (Beebotte)</button></a>&nbsp;&nbsp;&nbsp;&nbsp;<span style="border-image: initial; border: 1px solid black;"><i> {{mean_beebotte}} </i>&nbsp;</span></p>
+        <a href="/graficas">Generación de gráficas externas</a><br>
+    </div>
 </body>
 </html>
 
