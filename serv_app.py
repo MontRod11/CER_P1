@@ -11,6 +11,8 @@ login_var = False
 user = "Inicie sesión"
 medialocal_global = "No se puede obtener este valor sin estar registrado"
 mediainternet_global = "No se puede obtener este valor sin estar registrado"
+bad_pass = 0
+ya_registrado = 0
 # CREAR NUEVO RECURSO CADA VEZ, SE PUEDE HACER USANDO EL CÓDIGO COMENTADO SI SE PONE LA API Y SECRET KEY
 
 elastic_client = Elasticsearch([{'host':'localhost','port':9200}])
@@ -30,6 +32,7 @@ recurso="bbddserver_2"
 # )
 
 app = Flask(__name__)
+app.secret_key = 'lausi'
 
 tabla = "tabla2"
 elastic_client.indices.create(index=tabla, ignore=400)
@@ -86,22 +89,27 @@ def loggeado():
     global I_WRITE_NAMES
     global login_var
     global user
+    global bad_pass
     user_prev = user
     if request.method == "POST":  
         user=request.form['email'] 
+        password = request.form['pass']
         if user == '':
 	        return render_template('falloiniciosesion.html')	
         else:
-            if user == user_prev:
+            if user == user_prev:# and bad_pass != 1:
                 return render_template('falloinicio_logged.html')
             if I_WRITE_NAMES == 0:
                 """Devolver nuevo index donde se indique que no está loggeado"""
+                user = ''
                 return render_template('falloiniciosesionnosignin.html')
             else:
                 for i in range(I_WRITE_NAMES):
                     nombre = elastic_client.get(index=tabla_nombres,id=i)['_source']['nombre']
+                    passkey = elastic_client.get(index=tabla_nombres,id=i)['_source']['password']
                     print('Nombre '+str(i)+' : '+nombre)
-                    if nombre == user:
+                    if (nombre == user) and (password == passkey):
+                        session['username'] = user
                         """ Inicio de sesión:
                             - Comprobar contraseña
                             - Devolver el index con la sesión iniciada
@@ -109,6 +117,9 @@ def loggeado():
                         login_var = True
                         r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
                         return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
+                    elif (nombre == user) and (password != passkey):
+                        bad_pass = 1
+                        return render_template('indexlogin_badpass.html')
                     else:
                         """Devolver nuevo index donde se indique que no está loggeado"""
                         return render_template('falloiniciosesionnosignin.html')
@@ -126,14 +137,16 @@ def signin():
 def registrado():
     """Comprobar que existe el usuario en la base de datos y comprobar la constaseña devolver en user el session['email'] ya que es un str """
     global I_WRITE_NAMES
+    global ya_registrado
     # global user
     if request.method == "POST":  
         user_reg=request.form['email'] 
+        password = request.form['pass']
         if user_reg == '':
 	        return render_template('falloregistro.html')	
         else:
             if I_WRITE_NAMES == 0:
-                elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg})
+                elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':password})
                 I_WRITE_NAMES =I_WRITE_NAMES+1
                 return render_template('indexlogin.html')
                 #return render_template('index.html',mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
@@ -144,9 +157,10 @@ def registrado():
                     if nombre == user_reg:
                         ya_registrado = 1
                 if ya_registrado == 1:
+                    #ya_registrado = 0
                     return render_template('falloregistro_yaloggeado.html')
                 else:
-                    elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg})
+                    elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':password})
                     I_WRITE_NAMES =I_WRITE_NAMES+1
                     return render_template('indexlogin.html')
             
@@ -160,6 +174,7 @@ def logout():
     global medialocal_global
     global mediainternet_global
     global user
+    session.pop(user,None)
     user = "Inicie Sesión"
     login_var = False
     mediainternet_global = "No se puede obtener este valor sin estar registrado"
@@ -249,7 +264,11 @@ def internet_mean():
 
 @app.route("/graficas") 
 def graphs():
-    return 'graficas'    
+    if login_var == True:
+        return redirect("https://beebotte.com/dash/f23d2c10-38a4-11ec-954b-39d34f82886a?shareid=shareid_LGMm8A6GK3OwCaHK") 
+    else: 
+        return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], mean_local=medialocal_global,
+                                mean_beebotte=mediainternet_global,user=user)
 
 def get_num_aleatorio():
     global I_WRITE
