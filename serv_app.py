@@ -76,23 +76,45 @@ def hello():
 
 @app.route("/login")
 def login():
-    global login_var
+
     """Realizar el login y si es succesful entonces poner login == TRUE"""
     
-    login_var = True
     return render_template("indexlogin.html")  
 
 @app.route("/loggeado",methods = ["POST"])
 def loggeado():
+    global I_WRITE_NAMES
+    global login_var
+    global user
+    user_prev = user
     if request.method == "POST":  
         user=request.form['email'] 
         if user == '':
 	        return render_template('falloiniciosesion.html')	
         else:
-	        """Comprobar que existe el usuario en la base de datos y comprobar la constaseña"""
-	        """    devolver en user el session['email'] ya que es un str """
-    r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
-    return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
+            if user == user_prev:
+                return render_template('falloinicio_logged.html')
+            if I_WRITE_NAMES == 0:
+                """Devolver nuevo index donde se indique que no está loggeado"""
+                return render_template('falloiniciosesionnosignin.html')
+            else:
+                for i in range(I_WRITE_NAMES):
+                    nombre = elastic_client.get(index=tabla_nombres,id=i)['_source']['nombre']
+                    print('Nombre '+str(i)+' : '+nombre)
+                    if nombre == user:
+                        """ Inicio de sesión:
+                            - Comprobar contraseña
+                            - Devolver el index con la sesión iniciada
+                        """
+                        login_var = True
+                        r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
+                        return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
+                    else:
+                        """Devolver nuevo index donde se indique que no está loggeado"""
+                        return render_template('falloiniciosesionnosignin.html')
+                
+
+   
 
 
 @app.route("/signin")  
@@ -104,29 +126,29 @@ def signin():
 def registrado():
     """Comprobar que existe el usuario en la base de datos y comprobar la constaseña devolver en user el session['email'] ya que es un str """
     global I_WRITE_NAMES
-    global user
+    # global user
     if request.method == "POST":  
-        user=request.form['email'] 
-        if user == '':
+        user_reg=request.form['email'] 
+        if user_reg == '':
 	        return render_template('falloregistro.html')	
         else:
-
             if I_WRITE_NAMES == 0:
-                elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user})
+                elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg})
                 I_WRITE_NAMES =I_WRITE_NAMES+1
-                return render_template('index.html',mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
+                return render_template('indexlogin.html')
+                #return render_template('index.html',mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
             else:
                 for i in range(I_WRITE_NAMES):
                     nombre = elastic_client.get(index=tabla_nombres,id=i)['_source']['nombre']
                     print('Nombre '+str(i)+' : '+nombre)
-                    if nombre == user:
+                    if nombre == user_reg:
                         ya_registrado = 1
                 if ya_registrado == 1:
                     return render_template('falloregistro_yaloggeado.html')
                 else:
-                    elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user})
+                    elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg})
                     I_WRITE_NAMES =I_WRITE_NAMES+1
-                    return render_template('index.html',mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
+                    return render_template('indexlogin.html')
             
 	        
 
@@ -137,6 +159,8 @@ def logout():
     global login_var
     global medialocal_global
     global mediainternet_global
+    global user
+    user = "Inicie Sesión"
     login_var = False
     mediainternet_global = "No se puede obtener este valor sin estar registrado"
     medialocal_global = "No se puede obtener este valor sin estar registrado"
