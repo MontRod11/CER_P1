@@ -104,6 +104,7 @@ def signin():
 def registrado():
     """Comprobar que existe el usuario en la base de datos y comprobar la constaseña devolver en user el session['email'] ya que es un str """
     global I_WRITE_NAMES
+    global user
     if request.method == "POST":  
         user=request.form['email'] 
         if user == '':
