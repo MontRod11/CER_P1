@@ -265,7 +265,7 @@ def internet_mean():
 @app.route("/graficas") 
 def graphs():
     if login_var == True:
-        return redirect("https://beebotte.com/dash/f23d2c10-38a4-11ec-954b-39d34f82886a?shareid=shareid_LGMm8A6GK3OwCaHK") 
+        return redirect("https://beebotte.com/dash/a4986a00-38b9-11ec-954b-39d34f82886a?shareid=shareid_s410ZmUDNJAKMbfq") 
     else: 
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], mean_local=medialocal_global,
                                 mean_beebotte=mediainternet_global,user=user)
@@ -283,5 +283,5 @@ if __name__ == "__main__":
 
     hilo1 = Thread(target=get_num_aleatorio, daemon=True)
     hilo1.start()
-    # app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    #app.run(host='0.0.0.0', port=5000, debug=True)
