@@ -1,7 +1,8 @@
-from flask import Flask, render_template, redirect, request, url_for, session, flash
+from flask import Flask, render_template, redirect, request,session
 from elasticsearch import Elasticsearch
-import re, requests
-from threading import *
+import re, requests, uuid, hashlib, time
+from flask.helpers import total_seconds
+from threading import Thread
 from beebotte import *
 
 
@@ -45,13 +46,6 @@ def inicio():
     """
     Esta función es la funcion base e inicial del programa, en este caso solo se actualiza el indice sacando un número aleatorio de la pagina web numero al azar
     """
-    # if request.method == "POST":  
-    #     user=request.form['email'] 
-    #     if session['email'] == ' ':
-	#         render_template('falloiniciosesion.html')	
-    #     else:
-	#         """Comprobar que existe el usuario en la base de datos y comprobar la constaseña"""
-	#         """    devolver en user el session['email'] ya que es un str """
     r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
     return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
 
@@ -73,15 +67,12 @@ def hello():
         value = lectura[i]['data']
         print('Elemento '+str(i)+' : '+str(value))
     print('\n')
-    #print(str(lectura)+'\n')
     return render_template('/laura/index.html',num_aleat=str(data), mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
 
 
 @app.route("/login")
 def login():
-
-    """Realizar el login y si es succesful entonces poner login == TRUE"""
-    
+    """Realizar el login"""
     return render_template("indexlogin.html")  
 
 @app.route("/loggeado",methods = ["POST"])
@@ -90,6 +81,10 @@ def loggeado():
     global login_var
     global user
     global bad_pass
+    # if bad_pass == 1:
+    #   user_prev = '0'
+    # else:
+    #   user_prev = user
     user_prev = user
     if request.method == "POST":  
         user=request.form['email'] 
@@ -100,7 +95,7 @@ def loggeado():
             if user == user_prev:# and bad_pass != 1:
                 return render_template('falloinicio_logged.html')
             if I_WRITE_NAMES == 0:
-                """Devolver nuevo index donde se indique que no está loggeado"""
+                """Devolver nuevo index donde se indique que no está registrado"""
                 user = ''
                 return render_template('falloiniciosesionnosignin.html')
             else:
@@ -123,9 +118,6 @@ def loggeado():
                     else:
                         """Devolver nuevo index donde se indique que no está loggeado"""
                         return render_template('falloiniciosesionnosignin.html')
-                
-
-   
 
 
 @app.route("/signin")  
@@ -146,7 +138,11 @@ def registrado():
 	        return render_template('falloregistro.html')	
         else:
             if I_WRITE_NAMES == 0:
-                elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':password})
+                salt=  uuid.uuid4().hex # Fuente: https://www.iteramos.com/pregunta/44612/la-sal-y-el-hash-de-una-contrasena-en-python
+                # contraseña cifrada con la sal, elegida porque más segura que semilla
+                # passw =  hashlib.sha512(password.encode('utf-8') + salt.encode('utf-8')).hexdigest() #Fuente: https://www.iteramos.com/pregunta/44612/la-sal-y-el-hash-de-una-contrasena-en-python
+                passw =  hashlib.sha512(password + salt).hexdigest()
+                elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt})
                 I_WRITE_NAMES =I_WRITE_NAMES+1
                 return render_template('indexlogin.html')
                 #return render_template('index.html',mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
@@ -157,15 +153,14 @@ def registrado():
                     if nombre == user_reg:
                         ya_registrado = 1
                 if ya_registrado == 1:
-                    #ya_registrado = 0
+                    ya_registrado = 0
                     return render_template('falloregistro_yaloggeado.html')
                 else:
-                    elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':password})
+                    salt = uuid.uuid4().hex # semilla con la que se va a cifrar 
+                    passw = hashlib.sha512(password + salt).hexdigest()
+                    elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt})
                     I_WRITE_NAMES =I_WRITE_NAMES+1
                     return render_template('indexlogin.html')
-            
-	        
-
     
 
 @app.route("/logout") 
@@ -277,7 +272,7 @@ def get_num_aleatorio():
         elastic_client.index(index=tabla, id=I_WRITE, document={'numero':float(r)})
         bclient.write('cer_bbddserver',recurso,data=float(r))
         I_WRITE =I_WRITE+1
-        time.sleep(30) #120
+        time.sleep(120) #120
 
 if __name__ == "__main__":
 
