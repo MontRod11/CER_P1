@@ -9,7 +9,7 @@ from beebotte import *
 I_WRITE = 0
 I_WRITE_NAMES = 0
 login_var = False
-user = "Inicie sesión"
+user = "Iniciar Sesión"
 medialocal_global = "No se puede obtener este valor sin estar registrado"
 mediainternet_global = "No se puede obtener este valor sin estar registrado"
 bad_pass = 0
@@ -81,11 +81,11 @@ def loggeado():
     global login_var
     global user
     global bad_pass
-    # if bad_pass == 1:
-    #   user_prev = '0'
-    # else:
-    #   user_prev = user
-    user_prev = user
+    if bad_pass == 1:
+       user_prev = '0'
+    else:
+       user_prev = user
+    #user_prev = user
     if request.method == "POST":  
         user=request.form['email'] 
         password = request.form['pass']
@@ -102,8 +102,11 @@ def loggeado():
                 for i in range(I_WRITE_NAMES):
                     nombre = elastic_client.get(index=tabla_nombres,id=i)['_source']['nombre']
                     passkey = elastic_client.get(index=tabla_nombres,id=i)['_source']['password']
+                    salt = elastic_client.get(index=tabla_nombres,id=i)['_source']['sal']
+                    # Codificamos la password con la salt para ver si salen igual
+                    passw =  hashlib.sha512(password.encode('utf-8') + salt.encode('utf-8')).hexdigest()
                     print('Nombre '+str(i)+' : '+nombre)
-                    if (nombre == user) and (password == passkey):
+                    if (nombre == user) and (passw == passkey):
                         session['username'] = user
                         """ Inicio de sesión:
                             - Comprobar contraseña
@@ -112,9 +115,9 @@ def loggeado():
                         login_var = True
                         r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
                         return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
-                    elif (nombre == user) and (password != passkey):
+                    elif (nombre == user) and (passw != passkey):
                         bad_pass = 1
-                        return render_template('indexlogin_badpass.html')
+                        return render_template('indexlogin badpass.html')
                     else:
                         """Devolver nuevo index donde se indique que no está loggeado"""
                         return render_template('falloiniciosesionnosignin.html')
@@ -140,8 +143,8 @@ def registrado():
             if I_WRITE_NAMES == 0:
                 salt=  uuid.uuid4().hex # Fuente: https://www.iteramos.com/pregunta/44612/la-sal-y-el-hash-de-una-contrasena-en-python
                 # contraseña cifrada con la sal, elegida porque más segura que semilla
-                # passw =  hashlib.sha512(password.encode('utf-8') + salt.encode('utf-8')).hexdigest() #Fuente: https://www.iteramos.com/pregunta/44612/la-sal-y-el-hash-de-una-contrasena-en-python
-                passw =  hashlib.sha512(password + salt).hexdigest()
+                passw =  hashlib.sha512(password.encode('utf-8') + salt.encode('utf-8')).hexdigest() #Fuente: https://www.iteramos.com/pregunta/44612/la-sal-y-el-hash-de-una-contrasena-en-python
+                #passw =  hashlib.sha512(password + salt).hexdigest()
                 elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt})
                 I_WRITE_NAMES =I_WRITE_NAMES+1
                 return render_template('indexlogin.html')
@@ -157,7 +160,7 @@ def registrado():
                     return render_template('falloregistro_yaloggeado.html')
                 else:
                     salt = uuid.uuid4().hex # semilla con la que se va a cifrar 
-                    passw = hashlib.sha512(password + salt).hexdigest()
+                    passw =  hashlib.sha512(password.encode('utf-8') + salt.encode('utf-8')).hexdigest()
                     elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt})
                     I_WRITE_NAMES =I_WRITE_NAMES+1
                     return render_template('indexlogin.html')
