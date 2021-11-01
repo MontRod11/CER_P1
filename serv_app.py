@@ -49,6 +49,37 @@ def inicio():
     r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
     return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
 
+@app.route("/umbral1",methods = ["POST"])
+def umbral1():
+    """
+    Esta función es la funcion que permite mostral el umbral histórico que supera cierto umbral
+    """
+    umbral=request.form['umbral']
+    if umbral == '':
+        return render_template('umbral1_noumbral.html')
+    else:
+        umbral = int(umbral)
+    if I_WRITE == 0:
+        hist = 0
+        return render_template('umbral1.html', historico=str(hist), umbral=umbral)
+    elif I_WRITE < 5:
+        hist = []
+        for i in range(I_WRITE):
+            aux = elastic_client.get(index=tabla,id=i)['_source']['numero']
+            if aux > umbral:
+                hist.append(aux)
+        return render_template('umbral1.html',historico=str(hist), umbral=umbral)       
+    else:
+        hist = []
+        j = 0
+        for i in range(I_WRITE,0,-1):
+            aux = elastic_client.get(index=tabla,id=i-1)['_source']['numero']
+            if aux > umbral:
+                hist.append(aux)
+                j = j +1
+            if j == 5:
+                break   
+        return render_template('umbral1.html', historico=str(hist), umbral=umbral)
 
 @app.route("/hello")
 def hello():
@@ -68,7 +99,6 @@ def hello():
         print('Elemento '+str(i)+' : '+str(value))
     print('\n')
     return render_template('/laura/index.html',num_aleat=str(data), mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
-
 
 @app.route("/login")
 def login():
@@ -122,7 +152,6 @@ def loggeado():
                         """Devolver nuevo index donde se indique que no está loggeado"""
                         return render_template('falloiniciosesionnosignin.html')
 
-
 @app.route("/signin")  
 def signin():
     """Realizar el signin metiendo el ususario en la base de datos y usandolo como inicio de sesion"""
@@ -165,7 +194,6 @@ def registrado():
                     I_WRITE_NAMES =I_WRITE_NAMES+1
                     return render_template('indexlogin.html')
     
-
 @app.route("/logout") 
 def logout():
     global login_var
@@ -275,7 +303,7 @@ def get_num_aleatorio():
         elastic_client.index(index=tabla, id=I_WRITE, document={'numero':float(r)})
         bclient.write('cer_bbddserver',recurso,data=float(r))
         I_WRITE =I_WRITE+1
-        time.sleep(120) #120
+        time.sleep(10) #120
 
 if __name__ == "__main__":
 
