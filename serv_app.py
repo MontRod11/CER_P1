@@ -14,6 +14,9 @@ medialocal_global = "No se puede obtener este valor sin estar registrado"
 mediainternet_global = "No se puede obtener este valor sin estar registrado"
 bad_pass = 0
 ya_registrado = 0
+num_veces_elastic = 0
+num_veces_beebotte =  0
+
 # CREAR NUEVO RECURSO CADA VEZ, SE PUEDE HACER USANDO EL CÓDIGO COMENTADO SI SE PONE LA API Y SECRET KEY
 
 elastic_client = Elasticsearch([{'host':'localhost','port':9200}])
@@ -111,6 +114,9 @@ def loggeado():
     global login_var
     global user
     global bad_pass
+    global num_veces_beebotte
+    global num_veces_elastic
+    global indice_usuario
     if bad_pass == 1:
        user_prev = '0'
     else:
@@ -142,6 +148,9 @@ def loggeado():
                             - Comprobar contraseña
                             - Devolver el index con la sesión iniciada
                         """
+                        indice_usuario = i
+                        num_veces_beebotte =  elastic_client.get(index=tabla_nombres,id=i)['_source']['num_beebotte']
+                        num_veces_elastic =  elastic_client.get(index=tabla_nombres,id=i)['_source']['num_elastic']
                         login_var = True
                         r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
                         return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
@@ -174,7 +183,7 @@ def registrado():
                 # contraseña cifrada con la sal, elegida porque más segura que semilla
                 passw =  hashlib.sha512(password.encode('utf-8') + salt.encode('utf-8')).hexdigest() #Fuente: https://www.iteramos.com/pregunta/44612/la-sal-y-el-hash-de-una-contrasena-en-python
                 #passw =  hashlib.sha512(password + salt).hexdigest()
-                elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt})
+                elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt,num_veces_elastic:'num_elastic',num_veces_beebotte:'mun_beebotte'})
                 I_WRITE_NAMES =I_WRITE_NAMES+1
                 return render_template('indexlogin.html')
                 #return render_template('index.html',mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
@@ -190,7 +199,7 @@ def registrado():
                 else:
                     salt = uuid.uuid4().hex # semilla con la que se va a cifrar 
                     passw =  hashlib.sha512(password.encode('utf-8') + salt.encode('utf-8')).hexdigest()
-                    elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt})
+                    elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt,num_veces_elastic:'num_elastic',num_veces_beebotte:'mun_beebotte'})
                     I_WRITE_NAMES =I_WRITE_NAMES+1
                     return render_template('indexlogin.html')
     
@@ -200,6 +209,7 @@ def logout():
     global medialocal_global
     global mediainternet_global
     global user
+    elastic_client.index(index=tabla_nombres, id=indice_usuario, document={num_veces_elastic:'num_elastic',num_veces_beebotte:'mun_beebotte'})
     session.pop(user,None)
     user = "Inicie Sesión"
     login_var = False
@@ -214,6 +224,7 @@ def local_mean():
     está, entonces no saca nada.
     """
     global medialocal_global
+    global num_veces_elastic
     if login_var == True:
         data = []
         print("\nCalculo de la media en la base de datos local:")
@@ -238,7 +249,7 @@ def local_mean():
         print('La media es:'+str(mean))
         print('Acumulacion: '+str(sum_values))
         print('Nº de valores: '+str(num_values)+"\n")
-
+        num_veces_elastic =  num_veces_elastic +1
         medialocal_global = str(mean)
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], 
                                 mean_local=medialocal_global,mean_beebotte=mediainternet_global, user=user)
@@ -253,6 +264,7 @@ def internet_mean():
     Esta función realiza el cálculo de la media de la base de datos de internet y actualiza la página web sacando su valor, si el usuario está loggeado y, 
     si no lo está, entonces no saca nada.
     """
+    global num_veces_beebotte
     global mediainternet_global
     if login_var == True:
         lectura = bclient.read('cer_bbddserver',recurso,limit=I_WRITE)
@@ -279,7 +291,7 @@ def internet_mean():
         print('La media es:'+str(mean))
         print('Acumulacion: '+str(sum_values))
         print('Nº de valores: '+str(num_values)+"\n")
-
+        num_veces_beebotte = num_veces_beebotte +1
         mediainternet_global = str(mean)
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], mean_local=medialocal_global,
                                 mean_beebotte=mediainternet_global, user=user)
