@@ -160,9 +160,10 @@ def loggeado():
                     elif (nombre == user) and (passw != passkey):
                         bad_pass = 1
                         return render_template('indexlogin badpass.html')
-                    else:
-                        """Devolver nuevo index donde se indique que no está loggeado"""
-                        return render_template('falloiniciosesionnosignin.html')
+                return render_template('falloiniciosesionnosignin.html')        
+                # else:
+                #         """Devolver nuevo index donde se indique que no está loggeado"""
+                #         return render_template('falloiniciosesionnosignin.html')
 
 @app.route("/signin")  
 def signin():
