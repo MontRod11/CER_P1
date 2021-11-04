@@ -50,7 +50,7 @@ def inicio():
     Esta función es la funcion base e inicial del programa, en este caso solo se actualiza el indice sacando un número aleatorio de la pagina web numero al azar
     """
     r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
-    return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
+    return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user, num_veces_elastic=num_veces_elastic,num_veces_beebotte=num_veces_beebotte)
 
 @app.route("/umbral1",methods = ["POST"])
 def umbral1():
@@ -101,7 +101,8 @@ def hello():
         value = lectura[i]['data']
         print('Elemento '+str(i)+' : '+str(value))
     print('\n')
-    return render_template('/laura/index.html',num_aleat=str(data), mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
+    return render_template('/laura/index.html',num_aleat=str(data), mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user,
+                            num_veces_elastic=num_veces_elastic,num_veces_beebotte=num_veces_beebotte)
 
 @app.route("/login")
 def login():
@@ -153,7 +154,7 @@ def loggeado():
                         num_veces_elastic =  elastic_client.get(index=tabla_nombres,id=i)['_source']['num_elastic']
                         login_var = True
                         r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
-                        return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user)
+                        return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user,num_veces_elastic=num_veces_elastic,num_veces_beebotte=num_veces_beebotte)
                     elif (nombre == user) and (passw != passkey):
                         bad_pass = 1
                         return render_template('indexlogin badpass.html')
@@ -211,7 +212,11 @@ def logout():
     global medialocal_global
     global mediainternet_global
     global user
+    global num_veces_beebotte
+    global num_veces_elastic
     elastic_client.index(index=tabla_nombres, id=indice_usuario, document={'num_elastic':num_veces_elastic,'num_beebotte':num_veces_beebotte})
+    num_veces_elastic = "Inicie sesion"
+    num_veces_beebotte = "inicie sesion"
     session.pop(user,None)
     user = "Inicie Sesión"
     login_var = False
@@ -251,14 +256,14 @@ def local_mean():
         print('La media es:'+str(mean))
         print('Acumulacion: '+str(sum_values))
         print('Nº de valores: '+str(num_values)+"\n")
-        num_veces_elastic =  num_veces_elastic +1
+        num_veces_elastic =  str(int(num_veces_elastic) +1)
         medialocal_global = str(mean)
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], 
-                                mean_local=medialocal_global,mean_beebotte=mediainternet_global, user=user)
+                                mean_local=medialocal_global,mean_beebotte=mediainternet_global, user=user,num_veces_elastic=num_veces_elastic,num_veces_beebotte=num_veces_beebotte)
     else:
         medialocal_global = "No se puede obtener este valor sin estar registrado"
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], 
-                                mean_local=medialocal_global,mean_beebotte=mediainternet_global, user=user)
+                                mean_local=medialocal_global,mean_beebotte=mediainternet_global, user=user,num_veces_elastic=num_veces_elastic,num_veces_beebotte=num_veces_beebotte)
 
 @app.route("/media_internet") 
 def internet_mean():
@@ -293,14 +298,14 @@ def internet_mean():
         print('La media es:'+str(mean))
         print('Acumulacion: '+str(sum_values))
         print('Nº de valores: '+str(num_values)+"\n")
-        num_veces_beebotte = num_veces_beebotte +1
+        num_veces_beebotte = str(int(num_veces_beebotte) +1)
         mediainternet_global = str(mean)
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], mean_local=medialocal_global,
-                                mean_beebotte=mediainternet_global, user=user)
+                                mean_beebotte=mediainternet_global, user=user,num_veces_elastic=num_veces_elastic,num_veces_beebotte=num_veces_beebotte)
     else:
         mediainternet_global = "No se puede obtener este valor sin estar registrado"
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], mean_local=medialocal_global,
-                                mean_beebotte=mediainternet_global,user=user)
+                                mean_beebotte=mediainternet_global,user=user,num_veces_elastic=num_veces_elastic,num_veces_beebotte=num_veces_beebotte)
 
 @app.route("/graficas") 
 def graphs():
@@ -308,7 +313,7 @@ def graphs():
         return redirect("https://beebotte.com/dash/a4986a00-38b9-11ec-954b-39d34f82886a?shareid=shareid_s410ZmUDNJAKMbfq") 
     else: 
         return render_template('index.html',num_aleat=re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4], mean_local=medialocal_global,
-                                mean_beebotte=mediainternet_global,user=user)
+                                mean_beebotte=mediainternet_global,user=user,num_veces_elastic=num_veces_elastic,num_veces_beebotte=num_veces_beebotte)
 
 def get_num_aleatorio():
     global I_WRITE
