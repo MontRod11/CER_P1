@@ -42,7 +42,9 @@ tabla = "tabla2"
 elastic_client.indices.create(index=tabla, ignore=400)
 elastic_client.indices.delete(index=tabla, ignore=[400,404])
 tabla_nombres = "tabla_nombres1"
+tabla_num_medias = "tabla_medias"
 elastic_client.indices.create(index=tabla_nombres, ignore=400)
+elastic_client.indices.create(index=tabla_num_medias, ignore=400)
 
 @app.route("/")#,methods = ["POST"])
 def inicio():
@@ -150,8 +152,8 @@ def loggeado():
                             - Devolver el index con la sesión iniciada
                         """
                         indice_usuario = i
-                        num_veces_beebotte =  elastic_client.get(index=tabla_nombres,id=i)['_source']['num_beebotte']
-                        num_veces_elastic =  elastic_client.get(index=tabla_nombres,id=i)['_source']['num_elastic']
+                        num_veces_beebotte =  elastic_client.get(index=tabla_num_medias,id=i)['_source']['num_beebotte']
+                        num_veces_elastic =  elastic_client.get(index=tabla_num_medias,id=i)['_source']['num_elastic']
                         login_var = True
                         r = re.compile('\d*\.?\d*<br>').findall(requests.get('https://www.numeroalazar.com.ar/').text)[0][:-4]
                         return render_template('index.html',num_aleat=r, mean_local = medialocal_global, mean_beebotte=mediainternet_global, user=user,num_veces_elastic=num_veces_elastic,num_veces_beebotte=num_veces_beebotte)
@@ -184,7 +186,9 @@ def registrado():
                 # contraseña cifrada con la sal, elegida porque más segura que semilla
                 passw =  hashlib.sha512(password.encode('utf-8') + salt.encode('utf-8')).hexdigest() #Fuente: https://www.iteramos.com/pregunta/44612/la-sal-y-el-hash-de-una-contrasena-en-python
                 #passw =  hashlib.sha512(password + salt).hexdigest()
-                elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt,'num_elastic':0,'num_beebotte':0})
+                elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt})
+                elastic_client.index(index=tabla_num_medias, id=I_WRITE_NAMES, document={'nombre':user_reg,'num_elastic':0,'num_beebotte':0})
+                #elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt,'num_elastic':0,'num_beebotte':0})
                 #elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt,'num_elastic':num_veces_elastic,'num_beebotte':num_veces_beebotte})
                 I_WRITE_NAMES =I_WRITE_NAMES+1
                 return render_template('indexlogin.html')
@@ -201,7 +205,9 @@ def registrado():
                 else:
                     salt = uuid.uuid4().hex # semilla con la que se va a cifrar 
                     passw =  hashlib.sha512(password.encode('utf-8') + salt.encode('utf-8')).hexdigest()
-                    elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt,'num_elastic':0,'num_beebotte':0})
+                    elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt})
+                    elastic_client.index(index=tabla_num_medias, id=I_WRITE_NAMES, document={'nombre':user_reg,'num_elastic':0,'num_beebotte':0})
+                    # elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt,'num_elastic':0,'num_beebotte':0})
                     # elastic_client.index(index=tabla_nombres, id=I_WRITE_NAMES, document={'nombre':user_reg,'password':passw,'sal':salt,'num_elastic':num_veces_elastic,'num_beebotte':num_veces_beebotte})
                     I_WRITE_NAMES =I_WRITE_NAMES+1
                     return render_template('indexlogin.html')
@@ -214,7 +220,7 @@ def logout():
     global user
     global num_veces_beebotte
     global num_veces_elastic
-    elastic_client.index(index=tabla_nombres, id=indice_usuario, document={'num_elastic':num_veces_elastic,'num_beebotte':num_veces_beebotte})
+    elastic_client.index(index=tabla_num_medias, id=indice_usuario, document={'nombre':user,'num_elastic':num_veces_elastic,'num_beebotte':num_veces_beebotte})
     num_veces_elastic = "Inicie sesion"
     num_veces_beebotte = "inicie sesion"
     session.pop(user,None)
