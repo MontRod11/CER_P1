@@ -221,15 +221,26 @@ def logout():
     global user
     global num_veces_beebotte
     global num_veces_elastic
-    elastic_client.index(index=tabla_num_medias, id=indice_usuario, document={'nombre':user,'num_elastic':num_veces_elastic,'num_beebotte':num_veces_beebotte})
-    num_veces_elastic = "Inicie sesion"
-    num_veces_beebotte = "inicie sesion"
-    session.pop(user,None)
-    user = "Inicie Sesión"
-    login_var = False
-    mediainternet_global = "No se puede obtener este valor sin estar registrado"
-    medialocal_global = "No se puede obtener este valor sin estar registrado"
-    return render_template("indexlogout.html") 
+    if user == "Iniciar Sesión":
+        # elastic_client.index(index=tabla_num_medias, id=indice_usuario, document={'nombre':user,'num_elastic':num_veces_elastic,'num_beebotte':num_veces_beebotte})
+        num_veces_elastic = "Inicie sesion"
+        num_veces_beebotte = "Inicie sesion"
+        session.pop(user,None)
+        user = "Inicie Sesión"
+        login_var = False
+        mediainternet_global = "No se puede obtener este valor sin estar registrado"
+        medialocal_global = "No se puede obtener este valor sin estar registrado"
+        return render_template("indexlogout.html") 
+    else:
+        elastic_client.index(index=tabla_num_medias, id=indice_usuario, document={'nombre':user,'num_elastic':num_veces_elastic,'num_beebotte':num_veces_beebotte})
+        num_veces_elastic = "Inicie sesion"
+        num_veces_beebotte = "Inicie sesion"
+        session.pop(user,None)
+        user = "Inicie Sesión"
+        login_var = False
+        mediainternet_global = "No se puede obtener este valor sin estar registrado"
+        medialocal_global = "No se puede obtener este valor sin estar registrado"
+        return render_template("indexlogout.html") 
 
 @app.route("/media_local") 
 def local_mean():
