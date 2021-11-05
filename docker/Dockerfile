@@ -11,6 +11,6 @@ EXPOSE 5000
 # CMD ["serv_app.py"]
 #CMD python3 /serv_app.py
 CMD ["service", "elasticsearch", "start"]
-#ENTRYPOINT ["python3","/serv_app.py"]
+ENTRYPOINT ["python3","/serv_app.py"]
 # copy everything
 # run install.sh
