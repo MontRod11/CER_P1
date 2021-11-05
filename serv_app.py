@@ -226,7 +226,7 @@ def logout():
         num_veces_elastic = "Inicie sesion"
         num_veces_beebotte = "Inicie sesion"
         session.pop(user,None)
-        user = "Inicie Sesión"
+        user = "Iniciar Sesión"
         login_var = False
         mediainternet_global = "No se puede obtener este valor sin estar registrado"
         medialocal_global = "No se puede obtener este valor sin estar registrado"
@@ -236,7 +236,7 @@ def logout():
         num_veces_elastic = "Inicie sesion"
         num_veces_beebotte = "Inicie sesion"
         session.pop(user,None)
-        user = "Inicie Sesión"
+        user = "Iniciar Sesión"
         login_var = False
         mediainternet_global = "No se puede obtener este valor sin estar registrado"
         medialocal_global = "No se puede obtener este valor sin estar registrado"
