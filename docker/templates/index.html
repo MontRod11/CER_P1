@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LausiApp</title>
+</head>
+<body style="background-color:#ddbbf7"></body>
+    <div align="center">
+        <h2 class="centeredText">Sesión con el usuario: <i>{{user}}</i></h2>
+        <h3 class="centeredText">Número aleatorio:  {{num_aleat}}</h3>
+        <a href="/hello"><button style="width:200px;height:20px" >Último número BBDD</button></a><br><br>
+        <a href="/login"><button style="width:200px;height:20px">Login (INICIO SESIÓN)</button></a><br><br>
+        <a href="/signin"><button style="width:200px;height:20px">Sign-In (REGISTRO)</button></a><br><br>
+        <a href="/logout"><button style="width:200px;height:20px">Logout (SALIDA SESIÓN)</button></a><br><br>
+        <p><a href="/media_local"><button style="width:400px;height:20px">Botón de MEDIA de la BBDD Local (ElasticSearch)</button></a>&nbsp;&nbsp;&nbsp;&nbsp;<span style="border-image: initial; border: 1px solid black;"><i> {{mean_local}} </i>&nbsp;</span></p><br>
+        <p><a href="/media_internet"><button style="width:400px;height:20px">Botón de MEDIA de la BBDD de Internet (Beebotte)</button></a>&nbsp;&nbsp;&nbsp;&nbsp;<span style="border-image: initial; border: 1px solid black;"><i> {{mean_beebotte}} </i>&nbsp;</span></p><br>
+        <a href="/graficas"><button>Generación de gráficas externas</button></a><br><br>
+        <form method = "POST" action = "/umbral1">  
+            <table>  
+                    <tr><td>Introducir el valor del umbral para obtener el histórico: </td><td><input type = 'number' name = 'umbral'></td></tr>  
+                    <tr><td><input type = "submit" value = "Submit"></td></tr>  
+                </table>   
+        </form>  
+        <h3 class="centeredText">Número de veces que ha solicitado la media de la BBDD local como usuario: {{num_veces_elastic}}</h2>
+        <h3 class="centeredText">Número de veces que ha solicitado la media de la BBDD externa como usuario: {{num_veces_beebotte}}</h2>
+    </div>
+</body>
+</html>
+
