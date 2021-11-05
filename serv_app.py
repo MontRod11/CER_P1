@@ -340,7 +340,7 @@ def get_num_aleatorio():
         elastic_client.index(index=tabla, id=I_WRITE, document={'numero':float(r)})
         bclient.write('cer_bbddserver',recurso,data=float(r))
         I_WRITE =I_WRITE+1
-        time.sleep(10) #120
+        time.sleep(120) #120
 
 if __name__ == "__main__":
 
